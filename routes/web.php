@@ -36,8 +36,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::prefix('files')->group(function () {
-        Route::get('create', [ExcelFileController::class, 'create'])->name('files.create');
-        Route::post('/', [ExcelFileController::class, 'store'])->name('filex.store');
+        Route::get('/create', [ExcelFileController::class, 'create'])->name('files.create');
+        Route::post('/', [ExcelFileController::class, 'store'])->name('files.store');
+        Route::get('/{file}', [ExcelFileController::class, 'show'])->name('files.show');
     });
 });
 
