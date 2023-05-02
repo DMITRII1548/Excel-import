@@ -8,6 +8,7 @@ use App\Http\Resources\File\FileIdResource;
 use App\Imports\TableImport;
 use App\Models\ExcelFile;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
@@ -21,7 +22,7 @@ class ExcelFileController extends Controller
             abort(419);
         }
 
-        Excel::import(new TableImport($file), $file->path);
+        Excel::queueImport(new TableImport($file), $file->path);
 
         return ContentFileResource::make($file->ImportedTable)->resolve();
     }

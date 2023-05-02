@@ -10,7 +10,8 @@
             </div>
         </form>
     </div>
-    <div v-if="tableContentTitles" class="flex flex-col">
+    <div>
+    <div v-if="tableContentTitles" class="flex flex-col mx-auto w-1/2">
       <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
           <div class="overflow-hidden">
@@ -35,6 +36,8 @@
         </div>
       </div>
     </div>
+    </div>
+
 </template>
 
 <script>

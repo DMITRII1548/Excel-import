@@ -4,10 +4,12 @@ namespace App\Imports;
 
 use App\Models\ExcelFile;
 use App\Models\ImportedTable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class TableImport implements ToCollection
+class TableImport implements ToCollection, WithChunkReading, ShouldQueue
 {
     private ExcelFile $excelFile;
 
@@ -21,8 +23,24 @@ class TableImport implements ToCollection
     */
     public function collection(Collection $collection): void
     {
+        // If data already imported
+        if ($this->excelFile->importedTable) {
+            $contentCollection = json_decode($this->excelFile->importedTable->content);
+
+            $collection = collect($contentCollection)->merge($collection);
+            $this->excelFile->importedTable()->update([
+                'content' => $collection,
+            ]);
+        }
+
+        // If data did't import
         $this->excelFile->importedTable()->firstOrCreate([
             'content' => json_encode($collection),
         ]);
+    }
+
+    public function chunkSize(): int
+    {
+        return 1;
     }
 }
