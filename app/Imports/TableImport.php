@@ -2,14 +2,21 @@
 
 namespace App\Imports;
 
+use App\Events\TableImported;
+use App\Http\Resources\File\ContentFileChunkResource;
+use App\Http\Resources\File\ContentFileResource;
 use App\Models\ExcelFile;
 use App\Models\ImportedTable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterImport;
+use PhpParser\Error;
+use PhpParser\ErrorHandler;
 
-class TableImport implements ToCollection, WithChunkReading, ShouldQueue
+class TableImport implements WithEvents, ToCollection, WithChunkReading, ShouldQueue
 {
     private ExcelFile $excelFile;
 
@@ -19,28 +26,55 @@ class TableImport implements ToCollection, WithChunkReading, ShouldQueue
     }
 
     /**
-    * @param Collection $collection
-    */
-    public function collection(Collection $collection): void
+     * @return array
+     */
+    public function registerEvents(): array
+    {
+        return [
+            // Handle by a closure.
+            AfterImport::class => function (AfterImport $event) {
+                collect(ContentFileResource::make($this->excelFile->importedTable)
+                    ->resolve()['content'])
+                    ->chunk(1)
+                    ->each(function ($chunk): void {
+                        $this->excelFile->importedTable->content = $chunk;
+                        $data = ContentFileChunkResource::make($this->excelFile->importedTable)->resolve();
+
+                        broadcast(new TableImported($this->excelFile, $data));
+                    });
+            },
+        ];
+    }
+
+    /**
+     * @param Collection $collection
+     */
+    public function collection(Collection $collection)
     {
         // If data already imported
         if ($this->excelFile->importedTable) {
             $contentCollection = json_decode($this->excelFile->importedTable->content);
 
             $collection = collect($contentCollection)->merge($collection);
-            $this->excelFile->importedTable()->update([
-                'content' => $collection,
-            ]);
+            $this->excelFile
+                ->importedTable()
+                ->update([
+                    'content' => $collection,
+                ]);
         }
 
         // If data did't import
-        $this->excelFile->importedTable()->firstOrCreate([
-            'content' => json_encode($collection),
-        ]);
+        $this->excelFile
+            ->importedTable()
+            ->firstOrCreate([
+                'content' => json_encode($collection),
+            ]);
+
+        return 11;
     }
 
     public function chunkSize(): int
     {
-        return 1;
+        return 1000;
     }
 }

@@ -66,8 +66,12 @@ export default {
                 .then(response => {
                     axios.get(`/files/${response.data.id}`)
                         .then(res => {
-                            this.tableContentTitles = res.data.content.shift()
-                            this.tableContentItems = res.data.content
+                            window.Echo.private(`table.imported.${response.data.id}`)
+                                .listen('.table.imported', r => {
+                                    console.log(r)
+                                    // this.tableContentTitles = r.content.shift()
+                                    // this.tableContentItems = r.content
+                                })
                         })
                 })
         },

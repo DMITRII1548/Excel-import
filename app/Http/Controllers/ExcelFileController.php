@@ -7,7 +7,6 @@ use App\Http\Resources\File\ContentFileResource;
 use App\Http\Resources\File\FileIdResource;
 use App\Imports\TableImport;
 use App\Models\ExcelFile;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -16,15 +15,18 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelFileController extends Controller
 {
-    public function show(ExcelFile $file): array
+    public function show(ExcelFile $file): HttpResponse
     {
         if ($file->user != Auth::user()) {
             abort(419);
         }
 
-        Excel::queueImport(new TableImport($file), $file->path);
+        Excel::import(new TableImport($file), $file->path);
 
-        return ContentFileResource::make($file->ImportedTable)->resolve();
+        return response([
+            'processing' => true,
+        ]);
+        // return ContentFileResource::make($file->ImportedTable)->resolve();
     }
 
     public function create(): Response
