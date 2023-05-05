@@ -10,8 +10,11 @@
             </div>
         </form>
     </div>
+    <div v-if="processing.status" class="w-96 mx-auto mt-6">
+        <p class="font-medium text-sky-500 text-center">Processing{{ processing.dots }}</p>
+    </div>
     <div>
-    <div v-if="tableContentTitles" class="flex flex-col mx-auto w-1/2">
+    <div v-if="tableContentTitles" class="flex flex-col mx-auto w-1/2 mt-6">
       <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
           <div class="overflow-hidden">
@@ -25,9 +28,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="items in tableContentItems" class="border-b dark:border-neutral-500">
-                  <template v-for="item in items">
-                    <td class="whitespace-nowrap  px-6 py-4 font-medium">{{ item }}</td>
+                <tr v-for="rows in tableContentItems" class="border-b dark:border-neutral-500">
+                  <template v-for="items in rows">
+                    <template v-for="item in items">
+                        <td class="whitespace-nowrap  px-6 py-4 font-medium">{{ item }}</td>
+                    </template>
                   </template>
                 </tr>
               </tbody>
@@ -50,8 +55,16 @@ export default {
         return {
             file: null,
             tableContentTitles: null,
-            tableContentItems: null
+            tableContentItems: [],
+            processing: {
+                status: false,
+                dots: '',
+            },
         }
+    },
+
+    mounted() {
+        this.load()
     },
 
     methods: {
@@ -64,16 +77,42 @@ export default {
                 }
             })
                 .then(response => {
+                    this.file = null
+                    this.processing.status = true
+
                     axios.get(`/files/${response.data.id}`)
                         .then(res => {
+                            this.tableContentTitles = null
+                            this.tableContentItems = []
+
                             window.Echo.private(`table.imported.${response.data.id}`)
                                 .listen('.table.imported', r => {
-                                    console.log(r)
-                                    // this.tableContentTitles = r.content.shift()
-                                    // this.tableContentItems = r.content
+                                    this.processing.status = false
+
+                                    if (!this.tableContentTitles) {
+                                        this.tableContentTitles = r.content.shift()
+                                    } else {
+                                        this.tableContentItems.push(r.content)
+                                    }
                                 })
                         })
                 })
+        },
+
+        load() {
+            setTimeout(() => {
+                if (this.processing.dots === '') {
+                    this.processing.dots = '.'
+                } else if (this.processing.dots === '.') {
+                    this.processing.dots = '..'
+                } else if (this.processing.dots === '..') {
+                    this.processing.dots = '...'
+                } else {
+                    this.processing.dots = ''
+                }
+
+                this.load()
+            }, 1000)
         },
     },
 
