@@ -10,7 +10,11 @@
             </div>
         </form>
     </div>
-    <div v-if="tableContentTitles" class="flex flex-col">
+    <div v-if="processing.status" class="w-96 mx-auto mt-6">
+        <p class="font-medium text-sky-500 text-center">Processing{{ processing.dots }}</p>
+    </div>
+    <div>
+    <div v-if="tableContentTitles" class="flex flex-col mx-auto w-1/2 mt-6">
       <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
           <div class="overflow-hidden">
@@ -24,9 +28,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="items in tableContentItems" class="border-b dark:border-neutral-500">
-                  <template v-for="item in items">
-                    <td class="whitespace-nowrap  px-6 py-4 font-medium">{{ item }}</td>
+                <tr v-for="rows in tableContentItems" class="border-b dark:border-neutral-500">
+                  <template v-for="items in rows">
+                    <template v-for="item in items">
+                        <td class="whitespace-nowrap  px-6 py-4 font-medium">{{ item }}</td>
+                    </template>
                   </template>
                 </tr>
               </tbody>
@@ -35,6 +41,8 @@
         </div>
       </div>
     </div>
+    </div>
+
 </template>
 
 <script>
@@ -47,8 +55,25 @@ export default {
         return {
             file: null,
             tableContentTitles: null,
-            tableContentItems: null
+            tableContentItems: [],
+            processing: {
+                status: false,
+                dots: '',
+            },
+            currentSocketId: null,
         }
+    },
+
+    beforeDestroy() {
+
+    },
+
+    mounted() {
+        this.load()
+    },
+
+    beforeDestroy() {
+        Echo.leave(`table.imported.${this.currentSocketId}`)
     },
 
     methods: {
@@ -61,12 +86,47 @@ export default {
                 }
             })
                 .then(response => {
+                    this.file = null
+                    this.processing.status = true
+
                     axios.get(`/files/${response.data.id}`)
                         .then(res => {
-                            this.tableContentTitles = res.data.content.shift()
-                            this.tableContentItems = res.data.content
+                            this.tableContentTitles = null
+                            this.tableContentItems = []
+
+                            if (this.currentSocketId) {
+                                Echo.leave(`table.imported.${this.currentSocketId}`)
+                            }
+
+                            this.currentSocketId = response.data.id
+                            Echo.private(`table.imported.${this.currentSocketId}`)
+                                .listen('.table.imported', r => {
+                                    this.processing.status = false
+
+                                    if (!this.tableContentTitles) {
+                                        this.tableContentTitles = r.content.shift()
+                                    } else {
+                                        this.tableContentItems.push(r.content)
+                                    }
+                                })
                         })
                 })
+        },
+
+        load() {
+            setTimeout(() => {
+                if (this.processing.dots === '') {
+                    this.processing.dots = '.'
+                } else if (this.processing.dots === '.') {
+                    this.processing.dots = '..'
+                } else if (this.processing.dots === '..') {
+                    this.processing.dots = '...'
+                } else {
+                    this.processing.dots = ''
+                }
+
+                this.load()
+            }, 1000)
         },
     },
 
