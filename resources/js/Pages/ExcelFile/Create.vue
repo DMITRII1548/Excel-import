@@ -60,11 +60,20 @@ export default {
                 status: false,
                 dots: '',
             },
+            currentSocketId: null,
         }
+    },
+
+    beforeDestroy() {
+
     },
 
     mounted() {
         this.load()
+    },
+
+    beforeDestroy() {
+        Echo.leave(`table.imported.${this.currentSocketId}`)
     },
 
     methods: {
@@ -85,7 +94,12 @@ export default {
                             this.tableContentTitles = null
                             this.tableContentItems = []
 
-                            window.Echo.private(`table.imported.${response.data.id}`)
+                            if (this.currentSocketId) {
+                                Echo.leave(`table.imported.${this.currentSocketId}`)
+                            }
+
+                            this.currentSocketId = response.data.id
+                            Echo.private(`table.imported.${this.currentSocketId}`)
                                 .listen('.table.imported', r => {
                                     this.processing.status = false
 
