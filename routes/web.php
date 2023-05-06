@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DownloadsFileController;
 use App\Http\Controllers\ExcelFileController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -40,6 +41,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [ExcelFileController::class, 'store'])->name('files.store');
         Route::get('/{file}', [ExcelFileController::class, 'show'])->name('files.show');
     });
+
+    Route::get('/download/{file}', [DownloadsFileController::class, 'download'])->name('download.file');
 });
 
 require __DIR__.'/auth.php';
