@@ -26,7 +26,7 @@ class ExcelFileController extends Controller
         if ($file->importedTable) {
             SendImportedTable::dispatch($file);
         } else {
-            Excel::import(new TableImport($file), $file->path);
+            Excel::import(new TableImport($file), 'storage/' . $file->path);
         }
 
         return response([
@@ -43,7 +43,7 @@ class ExcelFileController extends Controller
     {
         $data = $request->validated();
 
-        $filePath = Storage::put('/files', $data['file']);
+        $filePath = Storage::disk('public')->put('/files', $data['file']);
 
         $file = Auth::user()->files()->create([
             'path' => $filePath,
