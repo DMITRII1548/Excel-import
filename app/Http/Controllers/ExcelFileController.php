@@ -6,6 +6,8 @@ use App\Http\Requests\ExcelFile\StoreRequest;
 use App\Http\Resources\File\ContentFileResource;
 use App\Http\Resources\File\FileIdResource;
 use App\Imports\TableImport;
+use App\Jobs\SendImportedFile;
+use App\Jobs\SendImportedTable;
 use App\Models\ExcelFile;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
@@ -21,12 +23,15 @@ class ExcelFileController extends Controller
             abort(419);
         }
 
-        Excel::import(new TableImport($file), $file->path);
+        if ($file->importedTable) {
+            SendImportedTable::dispatch($file);
+        } else {
+            Excel::import(new TableImport($file), $file->path);
+        }
 
         return response([
             'processing' => true,
         ]);
-        // return ContentFileResource::make($file->ImportedTable)->resolve();
     }
 
     public function create(): Response
