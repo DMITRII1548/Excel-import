@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Events\TableImported;
 use App\Http\Resources\File\ContentFileChunkResource;
 use App\Http\Resources\File\ContentFileResource;
+use App\Jobs\SendImportedTable;
 use App\Models\ExcelFile;
 use App\Models\ImportedTable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -33,15 +34,8 @@ class TableImport implements WithEvents, ToCollection, WithChunkReading, ShouldQ
         return [
             // Handle by a closure.
             AfterImport::class => function (AfterImport $event) {
-                collect(ContentFileResource::make($this->excelFile->importedTable)
-                    ->resolve()['content'])
-                    ->chunk(1)
-                    ->each(function ($chunk): void {
-                        $this->excelFile->importedTable->content = $chunk;
-                        $data = ContentFileChunkResource::make($this->excelFile->importedTable)->resolve();
-
-                        broadcast(new TableImported($this->excelFile, $data));
-                    });
+                $this->excelFile = ExcelFile::where('id', $this->excelFile->id)->first();
+                SendImportedTable::dispatch($this->excelFile);
             },
         ];
     }
