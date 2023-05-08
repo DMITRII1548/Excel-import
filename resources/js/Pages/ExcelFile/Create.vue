@@ -138,7 +138,7 @@ export default {
         },
 
         urlDowloadFile() {
-            return '/download/' + this.currentFileId
+            return '/files/download/' + this.currentFileId
         },
     },
 

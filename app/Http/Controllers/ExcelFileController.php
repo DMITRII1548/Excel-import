@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ExcelFileController extends Controller
 {
@@ -50,5 +51,14 @@ class ExcelFileController extends Controller
         ]);
 
         return FileIdResource::make($file)->resolve();
+    }
+
+    public function download(ExcelFile $file): BinaryFileResponse
+    {
+        if ($file->user != Auth::user()) {
+            abort(419);
+        }
+
+        return response()->download(public_path('storage/' . $file->path));
     }
 }

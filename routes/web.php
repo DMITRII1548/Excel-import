@@ -40,9 +40,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [ExcelFileController::class, 'create'])->name('files.create');
         Route::post('/', [ExcelFileController::class, 'store'])->name('files.store');
         Route::get('/{file}', [ExcelFileController::class, 'show'])->name('files.show');
-    });
+        Route::get('/download/{file}', [ExcelFileController::class, 'download'])->name('files.download');
 
-    Route::get('/download/{file}', [DownloadsFileController::class, 'download'])->name('download.file');
+    });
 });
 
 require __DIR__.'/auth.php';
