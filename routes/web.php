@@ -41,7 +41,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [ExcelFileController::class, 'store'])->name('files.store');
         Route::get('/{file}', [ExcelFileController::class, 'show'])->name('files.show');
         Route::get('/download/{file}', [ExcelFileController::class, 'download'])->name('files.download');
-
+        Route::get('/{file}/edit/addColumn', [ExcelFileController::class, 'addColumn'])->name('files.add.column');
     });
 });
 

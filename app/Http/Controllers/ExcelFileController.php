@@ -61,4 +61,9 @@ class ExcelFileController extends Controller
 
         return response()->download(public_path('storage/' . $file->path));
     }
+
+    public function addColumn(): Response
+    {
+        return inertia('ExcelFile/AddColumn');
+    }
 }
