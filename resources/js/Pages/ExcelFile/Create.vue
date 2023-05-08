@@ -14,35 +14,37 @@
         <p class="font-medium text-sky-500 text-center">Processing{{ processing.dots }}</p>
     </div>
     <div>
-    <div v-if="tableContentTitles" class="flex flex-col mx-auto w-1/2 mt-6">
-      <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-          <div class="overflow-hidden">
-            <table class="min-w-full text-center text-sm font-light">
-              <thead
-                class="border-b bg-neutral-50 font-medium dark:border-neutral-500 dark:text-neutral-800">
-                <tr>
-                  <template v-for="column in tableContentTitles">
-                    <th scope="col" class=" px-6 py-4">{{ column }}</th>
-                  </template>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="rows in tableContentItems" class="border-b dark:border-neutral-500">
-                  <template v-for="items in rows">
-                    <template v-for="item in items">
-                        <td class="whitespace-nowrap  px-6 py-4 font-medium">{{ item }}</td>
+        <div v-if="tableContentTitles" class="flex flex-col mx-auto w-1/2 mt-6">
+        <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
+            <div class="overflow-hidden">
+                <table class="min-w-full text-center text-sm font-light">
+                <thead
+                    class="border-b bg-neutral-50 font-medium dark:border-neutral-500 dark:text-neutral-800">
+                    <tr>
+                    <template v-for="column in tableContentTitles">
+                        <th scope="col" class=" px-6 py-4">{{ column }}</th>
                     </template>
-                  </template>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="rows in tableContentItems" class="border-b dark:border-neutral-500">
+                    <template v-for="items in rows">
+                        <template v-for="item in items">
+                            <td class="whitespace-nowrap  px-6 py-4 font-medium">{{ item }}</td>
+                        </template>
+                    </template>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+            </div>
         </div>
-      </div>
+        </div>
     </div>
+    <div v-if="tableContentTitles" class="w-1/2 mt-8 mx-auto">
+        <a :href="urlDowloadFile" class="mx-auto border-2 border-green-950 bg-green-400 rounded-full px-6 py-3 font-semibold text-green-950">Download</a>
     </div>
-
 </template>
 
 <script>
@@ -60,7 +62,7 @@ export default {
                 status: false,
                 dots: '',
             },
-            currentSocketId: null,
+            currentFileId: null,
         }
     },
 
@@ -73,7 +75,7 @@ export default {
     },
 
     beforeDestroy() {
-        Echo.leave(`table.imported.${this.currentSocketId}`)
+        Echo.leave(`table.imported.${this.currentFileId}`)
     },
 
     methods: {
@@ -94,12 +96,12 @@ export default {
                             this.tableContentTitles = null
                             this.tableContentItems = []
 
-                            if (this.currentSocketId) {
-                                Echo.leave(`table.imported.${this.currentSocketId}`)
+                            if (this.currentFileId) {
+                                Echo.leave(`table.imported.${this.currentFileId}`)
                             }
 
-                            this.currentSocketId = response.data.id
-                            Echo.private(`table.imported.${this.currentSocketId}`)
+                            this.currentFileId = response.data.id
+                            Echo.private(`table.imported.${this.currentFileId}`)
                                 .listen('.table.imported', r => {
                                     this.processing.status = false
 
@@ -133,6 +135,10 @@ export default {
     computed: {
         isDisabled() {
             return !this.file
+        },
+
+        urlDowloadFile() {
+            return '/files/download/' + this.currentFileId
         },
     },
 

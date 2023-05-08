@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ExcelFileController extends Controller
 {
@@ -26,7 +27,7 @@ class ExcelFileController extends Controller
         if ($file->importedTable) {
             SendImportedTable::dispatch($file);
         } else {
-            Excel::import(new TableImport($file), $file->path);
+            Excel::import(new TableImport($file), 'storage/' . $file->path);
         }
 
         return response([
@@ -43,12 +44,21 @@ class ExcelFileController extends Controller
     {
         $data = $request->validated();
 
-        $filePath = Storage::put('/files', $data['file']);
+        $filePath = Storage::disk('public')->put('/files', $data['file']);
 
         $file = Auth::user()->files()->create([
             'path' => $filePath,
         ]);
 
         return FileIdResource::make($file)->resolve();
+    }
+
+    public function download(ExcelFile $file): BinaryFileResponse
+    {
+        if ($file->user != Auth::user()) {
+            abort(419);
+        }
+
+        return response()->download(public_path('storage/' . $file->path));
     }
 }
