@@ -1,7 +1,7 @@
 <template>
 <div class="w-96 mx-auto mt-8 mb-8">
     <h1 class="text-lg text-center text-green-950 font-medium">Add column</h1>
-    <form class="flex flex-col items-center">
+    <form @submit.prevent="addColumn" class="flex flex-col items-center">
         <div>
             <input v-model="column.title" type="text" placeholder="Title">
         </div>
@@ -25,6 +25,10 @@
 export default {
     name: 'AddColumn',
 
+    props: [
+        'file'
+    ],
+
     data() {
         return {
             column: {
@@ -41,7 +45,10 @@ export default {
         },
 
         addColumn() {
-            console.log(111)
+            this.$inertia.patch(`/files/${this.file.id}/column`, {
+                title: this.column.title,
+                items: this.column.items,
+            })
         },
     },
 }

@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TableExport;
+use App\Http\Requests\ExcelFile\PushColumnRequest;
 use App\Http\Requests\ExcelFile\StoreRequest;
-use App\Http\Resources\File\ContentFileResource;
 use App\Http\Resources\File\FileIdResource;
 use App\Imports\TableImport;
-use App\Jobs\SendImportedFile;
-use App\Jobs\SendImportedTable;
 use App\Models\ExcelFile;
-use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
@@ -18,23 +16,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ExcelFileController extends Controller
 {
-    public function show(ExcelFile $file): HttpResponse
-    {
-        if ($file->user != Auth::user()) {
-            abort(419);
-        }
-
-        if ($file->importedTable) {
-            SendImportedTable::dispatch($file);
-        } else {
-            Excel::import(new TableImport($file), 'storage/' . $file->path);
-        }
-
-        return response([
-            'processing' => true,
-        ]);
-    }
-
     public function create(): Response
     {
         return inertia('ExcelFile/Create');
@@ -50,6 +31,8 @@ class ExcelFileController extends Controller
             'path' => $filePath,
         ]);
 
+        Excel::import(new TableImport($file), 'storage/' . $file->path);
+
         return FileIdResource::make($file)->resolve();
     }
 
@@ -62,8 +45,40 @@ class ExcelFileController extends Controller
         return response()->download(public_path('storage/' . $file->path));
     }
 
-    public function addColumn(): Response
+    public function addColumn(ExcelFile $file): Response
     {
-        return inertia('ExcelFile/AddColumn');
+        if ($file->user != Auth::user()) {
+            abort(419);
+        }
+
+        return inertia('ExcelFile/AddColumn', compact('file'));
+    }
+
+    public function pushColumn(PushColumnRequest $request, ExcelFile $file)
+    {
+        if ($file->user != Auth::user()) {
+            abort(419);
+        }
+
+        $data = $request->validated();
+        $column = [];
+        array_push($column, $data['title']);
+
+        foreach ($data['items'] as $item) {
+            array_push($column, $item);
+        }
+
+        $table = collect(json_decode($file->importedTable->content));
+        $i = 0;
+        foreach ($table as $item) {
+            if (isset($column[$i])) {
+                array_push($item, $column[$i]);
+                $table[$i] = $item;
+            }
+
+            $i++;
+        }
+
+        Excel::store(new TableExport($table), $file->path, 'public');
     }
 }
