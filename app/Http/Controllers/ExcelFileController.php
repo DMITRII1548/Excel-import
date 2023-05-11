@@ -7,6 +7,7 @@ use App\Http\Requests\ExcelFile\PushColumnRequest;
 use App\Http\Requests\ExcelFile\StoreRequest;
 use App\Http\Resources\File\FileIdResource;
 use App\Imports\StoredTableImport;
+use App\Imports\UpdatedTableImport;
 use App\Models\ExcelFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -83,6 +84,11 @@ class ExcelFileController extends Controller
             'content' => '',
         ]);
 
-        Excel::store(new TableExport($table, $file), $file->path, 'public');
+        Excel::store(new TableExport($table, $file), $file->path, 'public')
+            ->chain([
+                function () use ($file) {
+                    Excel::import(new UpdatedTableImport($file), $file->path, 'public');
+                }
+            ]);
     }
 }
