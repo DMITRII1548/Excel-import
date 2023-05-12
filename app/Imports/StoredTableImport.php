@@ -17,7 +17,7 @@ use Maatwebsite\Excel\Events\AfterImport;
 use PhpParser\Error;
 use PhpParser\ErrorHandler;
 
-class TableImport implements WithEvents, ToCollection, WithChunkReading, ShouldQueue
+class StoredTableImport implements WithEvents, ToCollection, WithChunkReading, ShouldQueue
 {
     private ExcelFile $excelFile;
 
@@ -43,7 +43,7 @@ class TableImport implements WithEvents, ToCollection, WithChunkReading, ShouldQ
     /**
      * @param Collection $collection
      */
-    public function collection(Collection $collection)
+    public function collection(Collection $collection): void
     {
         // If data already imported
         if ($this->excelFile->importedTable) {
@@ -63,8 +63,6 @@ class TableImport implements WithEvents, ToCollection, WithChunkReading, ShouldQ
             ->firstOrCreate([
                 'content' => json_encode($collection),
             ]);
-
-        return 11;
     }
 
     public function chunkSize(): int

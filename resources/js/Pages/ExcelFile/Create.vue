@@ -91,26 +91,23 @@ export default {
                     this.file = null
                     this.processing.status = true
 
-                    axios.get(`/files/${response.data.id}`)
-                        .then(res => {
-                            this.tableContentTitles = null
-                            this.tableContentItems = []
+                    this.tableContentTitles = null
+                    this.tableContentItems = []
 
-                            if (this.currentFileId) {
-                                Echo.leave(`table.imported.${this.currentFileId}`)
+                    if (this.currentFileId) {
+                        Echo.leave(`table.imported.${this.currentFileId}`)
+                    }
+
+                    this.currentFileId = response.data.id
+                    Echo.private(`table.imported.${this.currentFileId}`)
+                        .listen('.table.imported', r => {
+                            this.processing.status = false
+
+                            if (!this.tableContentTitles) {
+                                this.tableContentTitles = r.content.shift()
+                            } else {
+                                this.tableContentItems.push(r.content)
                             }
-
-                            this.currentFileId = response.data.id
-                            Echo.private(`table.imported.${this.currentFileId}`)
-                                .listen('.table.imported', r => {
-                                    this.processing.status = false
-
-                                    if (!this.tableContentTitles) {
-                                        this.tableContentTitles = r.content.shift()
-                                    } else {
-                                        this.tableContentItems.push(r.content)
-                                    }
-                                })
                         })
                 })
         },
@@ -151,4 +148,3 @@ export default {
 <style>
 
 </style>
-700
