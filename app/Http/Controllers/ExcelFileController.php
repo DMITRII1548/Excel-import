@@ -90,7 +90,7 @@ class ExcelFileController extends Controller
             if (isset($column[$i])) {
                 array_push($item, $column[$i]);
                 $table[$i] = $item;
-            } 
+            }
 
             $i++;
         }
@@ -107,5 +107,16 @@ class ExcelFileController extends Controller
             ]);
 
         return redirect()->route('files.show', $file->id);
+    }
+
+    public function editField(ExcelFile $file): Response
+    {
+        if ($file->user != Auth::user()) {
+            abort(419);
+        }
+
+        $file = FileIdResource::make($file)->resolve();
+
+        return inertia('ExcelFile/EditField', compact('file'));
     }
 }

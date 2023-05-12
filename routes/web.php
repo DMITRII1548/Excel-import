@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/download/{file}', [ExcelFileController::class, 'download'])->name('files.download');
         Route::get('/{file}/edit/column', [ExcelFileController::class, 'addColumn'])->name('files.edit.add.column');
         Route::patch('/{file}/column', [ExcelFileController::class, 'pushColumn'])->name('files.update.add.column');
+        Route::get('/{file}/edit/field', [ExcelFileController::class, 'editField'])->name('files.edit.field');
     });
 });
 
