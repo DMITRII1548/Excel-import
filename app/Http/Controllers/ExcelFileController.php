@@ -8,7 +8,9 @@ use App\Http\Requests\ExcelFile\StoreRequest;
 use App\Http\Resources\File\FileIdResource;
 use App\Imports\StoredTableImport;
 use App\Imports\UpdatedTableImport;
+use App\Jobs\SendImportedTable;
 use App\Models\ExcelFile;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
@@ -17,6 +19,19 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ExcelFileController extends Controller
 {
+    public function show(ExcelFile $file): Response
+    {
+        if ($file->user != Auth::user()) {
+            abort(419);
+        }
+
+        SendImportedTable::dispatch($file);
+
+        $file = FileIdResource::make($file)->resolve();
+
+        return inertia('ExcelFile/Show', compact('file'));
+    }
+
     public function create(): Response
     {
         return inertia('ExcelFile/Create');
@@ -55,7 +70,7 @@ class ExcelFileController extends Controller
         return inertia('ExcelFile/AddColumn', compact('file'));
     }
 
-    public function pushColumn(PushColumnRequest $request, ExcelFile $file)
+    public function pushColumn(PushColumnRequest $request, ExcelFile $file): RedirectResponse
     {
         if ($file->user != Auth::user()) {
             abort(419);
@@ -75,7 +90,7 @@ class ExcelFileController extends Controller
             if (isset($column[$i])) {
                 array_push($item, $column[$i]);
                 $table[$i] = $item;
-            }
+            } 
 
             $i++;
         }
@@ -88,7 +103,9 @@ class ExcelFileController extends Controller
             ->chain([
                 function () use ($file) {
                     Excel::import(new UpdatedTableImport($file), $file->path, 'public');
-                }
+                },
             ]);
+
+        return redirect()->route('files.show', $file->id);
     }
 }

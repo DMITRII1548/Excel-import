@@ -39,11 +39,11 @@ Route::middleware('auth')->group(function () {
     Route::prefix('files')->group(function () {
         Route::get('/create', [ExcelFileController::class, 'create'])->name('files.create');
         Route::post('/', [ExcelFileController::class, 'store'])->name('files.store');
+        Route::get('/{file}', [ExcelFileController::class, 'show'])->name('files.show');
         Route::get('/download/{file}', [ExcelFileController::class, 'download'])->name('files.download');
         Route::get('/{file}/edit/column', [ExcelFileController::class, 'addColumn'])->name('files.edit.add.column');
         Route::patch('/{file}/column', [ExcelFileController::class, 'pushColumn'])->name('files.update.add.column');
-
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
