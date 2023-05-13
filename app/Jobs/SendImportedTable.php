@@ -32,6 +32,7 @@ class SendImportedTable implements ShouldQueue
      */
     public function handle(): void
     {
+        
         collect(ContentFileResource::make($this->file->importedTable)
             ->resolve()['content'])
         ->chunk(1)

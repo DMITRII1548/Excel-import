@@ -3,6 +3,7 @@
 use App\Http\Controllers\DownloadsFileController;
 use App\Http\Controllers\ExcelFileController;
 use App\Http\Controllers\ProfileController;
+use App\Models\ExcelFile;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -44,6 +45,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{file}/edit/column', [ExcelFileController::class, 'addColumn'])->name('files.edit.add.column');
         Route::patch('/{file}/column', [ExcelFileController::class, 'pushColumn'])->name('files.update.add.column');
         Route::get('/{file}/edit/field', [ExcelFileController::class, 'editField'])->name('files.edit.field');
+        Route::put('/update/{file}/field', [ExcelFileController::class, 'updateField'])->name('files.update.field');
     });
 });
 
