@@ -72,10 +72,8 @@ export default {
 
     methods: {
         listenChannel() {
-            console.log(this.file.id)
             Echo.private(`table.imported.${this.file.id}`)
                 .listen('.table.imported', r => {
-                    console.log(r)
                     if (!this.tableContentTitles) {
                         this.tableContentTitles = r.content
                     } else {

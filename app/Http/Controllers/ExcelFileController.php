@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Exports\TableExport;
 use App\Http\Requests\ExcelFile\PushColumnRequest;
 use App\Http\Requests\ExcelFile\StoreRequest;
+use App\Http\Requests\ExcelFile\UpdateFieldRequest;
 use App\Http\Resources\File\FileIdResource;
 use App\Imports\StoredTableImport;
 use App\Imports\UpdatedTableImport;
+use App\Jobs\UpdateFieldTable;
 use App\Jobs\SendImportedTable;
 use App\Models\ExcelFile;
 use Illuminate\Http\RedirectResponse;
@@ -90,7 +92,7 @@ class ExcelFileController extends Controller
             if (isset($column[$i])) {
                 array_push($item, $column[$i]);
                 $table[$i] = $item;
-            } 
+            }
 
             $i++;
         }
@@ -103,6 +105,38 @@ class ExcelFileController extends Controller
             ->chain([
                 function () use ($file) {
                     Excel::import(new UpdatedTableImport($file), $file->path, 'public');
+                },
+            ]);
+
+        return redirect()->route('files.show', $file->id);
+    }
+
+    public function editField(ExcelFile $file): Response
+    {
+        if ($file->user != Auth::user()) {
+            abort(419);
+        }
+
+        $file = FileIdResource::make($file)->resolve();
+
+        return inertia('ExcelFile/EditField', compact('file'));
+    }
+
+    public function updateField(UpdateFieldRequest $request, ExcelFile $file): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $file->importedTable->update([
+            'content' => ''
+        ]);
+
+        UpdateFieldTable::dispatch($data['address'], $data['field'], $file)
+            ->chain([
+                function () use ($file) {
+                    Excel::import(new UpdatedTableImport($file), $file->path, 'public');
+                },
+                function () use ($file) {
+                    SendImportedTable::dispatch($file);
                 },
             ]);
 
