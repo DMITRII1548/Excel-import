@@ -142,4 +142,9 @@ class ExcelFileController extends Controller
 
         return redirect()->route('files.show', $file->id);
     }
+
+    public function join(): Response
+    {
+        return inertia('ExcelFile/Join');
+    }
 }

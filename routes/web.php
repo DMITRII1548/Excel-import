@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::prefix('files')->group(function () {
+        Route::get('/join', [ExcelFileController::class, 'join'])->name('files.join');
+        Route::post('/merge', [ExcelFile::class, 'merge'])->name('files.merge');
         Route::get('/create', [ExcelFileController::class, 'create'])->name('files.create');
         Route::post('/', [ExcelFileController::class, 'store'])->name('files.store');
         Route::get('/{file}', [ExcelFileController::class, 'show'])->name('files.show');
